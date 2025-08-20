@@ -1,0 +1,16 @@
+PODS:
+  - Then (3.0.0)
+
+DEPENDENCIES:
+  - Then
+
+SPEC REPOS:
+  trunk:
+    - Then
+
+SPEC CHECKSUMS:
+  Then: 844265ae87834bbe1147d91d5d41a404da2ec27d
+
+PODFILE CHECKSUM: d6af2abd555f0da600aaf12dd4f751dea279b710
+
+COCOAPODS: 1.16.2
