@@ -45,12 +45,12 @@ class MainViewController: BaseViewController {
     $0.translatesAutoresizingMaskIntoConstraints = false
   }
   
-  private let editButton = UIButton().then {
+  private let writeButton = UIButton().then {
     $0.setImage(.edit2, for: .normal)
     $0.layer.cornerRadius = 35
     $0.backgroundColor = .keyColor
     $0.translatesAutoresizingMaskIntoConstraints = false
-    $0.addTarget(self, action: #selector(editButtonTapped), for: .touchUpInside)
+    $0.addTarget(self, action: #selector(writeButtonTapped), for: .touchUpInside)
   }
   
   private let alignmentStack = UIStackView().then {
@@ -88,7 +88,7 @@ class MainViewController: BaseViewController {
   }
   
   override func setViewController() {
-    [calendarStackView, alignmentStack, editButton, emptyView].forEach {
+    [calendarStackView, alignmentStack, writeButton, emptyView].forEach {
       self.view.addSubview($0)
     }
     
@@ -110,10 +110,10 @@ class MainViewController: BaseViewController {
       NSLayoutConstraint(item: calendarStackView, attribute: .top, relatedBy: .equal, toItem: view.safeAreaLayoutGuide, attribute: .top, multiplier: 1.0, constant: 40),
       NSLayoutConstraint(item: calendarStackView, attribute: .centerX, relatedBy: .equal, toItem: view.safeAreaLayoutGuide, attribute: .centerX, multiplier: 1.0, constant: 0.0),
       
-      NSLayoutConstraint(item: editButton, attribute: .bottom, relatedBy: .equal, toItem: view.safeAreaLayoutGuide, attribute: .bottom, multiplier: 1.0, constant: -26),
-      NSLayoutConstraint(item: editButton, attribute: .trailing, relatedBy: .equal, toItem: view.safeAreaLayoutGuide, attribute: .trailing, multiplier: 1.0, constant: -16),
-      NSLayoutConstraint(item: editButton, attribute: .width, relatedBy: .equal, toItem: .none, attribute: .notAnAttribute, multiplier: 1.0, constant: 70),
-      NSLayoutConstraint(item: editButton, attribute: .height, relatedBy: .equal, toItem: .none, attribute: .notAnAttribute, multiplier: 1.0, constant: 70),
+      NSLayoutConstraint(item: writeButton, attribute: .bottom, relatedBy: .equal, toItem: view.safeAreaLayoutGuide, attribute: .bottom, multiplier: 1.0, constant: -26),
+      NSLayoutConstraint(item: writeButton, attribute: .trailing, relatedBy: .equal, toItem: view.safeAreaLayoutGuide, attribute: .trailing, multiplier: 1.0, constant: -16),
+      NSLayoutConstraint(item: writeButton, attribute: .width, relatedBy: .equal, toItem: .none, attribute: .notAnAttribute, multiplier: 1.0, constant: 70),
+      NSLayoutConstraint(item: writeButton, attribute: .height, relatedBy: .equal, toItem: .none, attribute: .notAnAttribute, multiplier: 1.0, constant: 70),
       
       NSLayoutConstraint(item: alignmentStack, attribute: .top, relatedBy: .equal, toItem: calendarStackView, attribute: .bottom, multiplier: 1.0, constant: 12),
       NSLayoutConstraint(item: alignmentStack, attribute: .leading, relatedBy: .equal, toItem: view.safeAreaLayoutGuide, attribute: .leading, multiplier: 1.0, constant: 16),
@@ -121,14 +121,15 @@ class MainViewController: BaseViewController {
       NSLayoutConstraint(item: emptyView, attribute: .top, relatedBy: .equal, toItem: alignmentStack, attribute: .bottom, multiplier: 1.0, constant: 10),
       NSLayoutConstraint(item: emptyView, attribute: .leading, relatedBy: .equal, toItem: view.safeAreaLayoutGuide, attribute: .leading, multiplier: 1.0, constant: 16),
       NSLayoutConstraint(item: emptyView, attribute: .trailing, relatedBy: .equal, toItem: view.safeAreaLayoutGuide, attribute: .trailing, multiplier: 1.0, constant: -16),
-      NSLayoutConstraint(item: emptyView, attribute: .bottom, relatedBy: .equal, toItem: editButton, attribute: .top, multiplier: 1.0, constant: -10)
+      NSLayoutConstraint(item: emptyView, attribute: .bottom, relatedBy: .equal, toItem: writeButton, attribute: .top, multiplier: 1.0, constant: -10)
     ])
   }
 }
 
 private extension MainViewController {
-  @objc func editButtonTapped() {
-    print("EditButtonTapped")
+  @objc func writeButtonTapped() {
+    let vc = WriteWeatherViewController()
+    navigationController?.pushViewController(vc, animated: true)
   }
   
   @objc func leftButtonTapped() {
