@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SwiftData
 import PhotosUI
 
 import Then
@@ -14,7 +15,8 @@ class WriteWeatherViewController: BaseViewController {
   private var lastPickedAssetId: String?
   private var shouldPreselect: Bool = true
   
-  private let viewModel = WriteWeatherViewModel()
+  private let modelContext: ModelContext
+  private let viewModel: WriteWeatherViewModel
   
   private let headerView = BaseNavigator().then {
     $0.translatesAutoresizingMaskIntoConstraints = false
@@ -81,6 +83,16 @@ class WriteWeatherViewController: BaseViewController {
     $0.preferredAction = continueAction
   }
   
+  init(modelContext: ModelContext) {
+    self.modelContext = modelContext
+    self.viewModel = WriteWeatherViewModel(modelContext: modelContext)
+    super.init(nibName: nil, bundle: nil)
+  }
+  
+  required init?(coder: NSCoder) {
+    fatalError()
+  }
+  
   override func viewDidLoad() {
     super.viewDidLoad()
     headerView.onBackButtonTapped = { [weak self] in
@@ -90,13 +102,14 @@ class WriteWeatherViewController: BaseViewController {
     
     toolbar.onSaveButtonTapped = { [weak self] in
       guard let self = self else { return }
-      print("save")
-      //self.viewModel.inputText = textView.text
+      self.writeView.endEditingIfNeeded()
+      self.viewModel.save()
     }
     
     toolbar.onAlignmentButtonTapped = { [weak self] alignment in
       guard let self = self else { return }
       self.writeView.setTextAlignment(alignment)
+      self.viewModel.alignment = alignment
     }
     
     toolbar.onImageButtonTapped = { [weak self] in
@@ -170,10 +183,7 @@ class WriteWeatherViewController: BaseViewController {
       guard let self = self else { return }
       guard let date = date else { return }
       
-      let formatter = DateFormatter()
-      formatter.locale = Locale(identifier: "ko_KR")
-      formatter.dateFormat = "M월 d일 EEEE"
-      let dateString = formatter.string(from: date)
+      let dateString = date.toKoreanString()
       
       var config = self.dateLabelButton.configuration
       config?.title = dateString
@@ -203,7 +213,6 @@ private extension WriteWeatherViewController {
     picker.delegate = self
     return picker
   }
-  
 }
 
 // MARK: - objc Method
@@ -227,6 +236,7 @@ private extension WriteWeatherViewController {
 extension WriteWeatherViewController: UITextViewDelegate {
   func textViewDidChange(_ textView: UITextView) {
     writeView.textViewDidChange(textView)
+    viewModel.inputText = writeView.text
   }
   
   func textViewDidChangeSelection(_ textView: UITextView) {

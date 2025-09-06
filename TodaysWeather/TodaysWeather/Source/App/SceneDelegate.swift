@@ -6,11 +6,14 @@
 //
 
 import UIKit
+import SwiftData
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
   var window: UIWindow?
 
+  private(set) var modelContainer: ModelContainer!
+  private(set) var modelContext: ModelContext!
 
   func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
     // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
@@ -18,7 +21,18 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
     guard let windowScene = (scene as? UIWindowScene) else { return }
     
-    let rootViewController = MainViewController()
+    do {
+      let config = ModelConfiguration(isStoredInMemoryOnly: false)
+      modelContainer = try ModelContainer(for: TodayWeather.self, configurations: config)
+      modelContext = ModelContext(modelContainer)
+      
+      modelContext.autosaveEnabled = true
+    } catch {
+      assertionFailure("ModelContainer init Error")
+      return
+    }
+    
+    let rootViewController = MainViewController(modelContext: modelContext)
     
     let window = UIWindow(windowScene: windowScene)
     window.overrideUserInterfaceStyle = .light

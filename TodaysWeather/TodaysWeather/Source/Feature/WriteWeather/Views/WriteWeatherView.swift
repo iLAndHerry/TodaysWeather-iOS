@@ -163,4 +163,19 @@ extension WriteWeatherView {
       self?.scrollToCursor()
     }
   }
+  
+  func endEditingIfNeeded() {
+      textView.resignFirstResponder()
+    }
+  
+  var text: String {
+    get {
+      if textView.textColor == .g400 { return "" }
+      return textView.text ?? ""
+    }
+    set {
+      textView.text = newValue
+      textView.textColor = .g700
+    }
+  }
 }
