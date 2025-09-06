@@ -18,6 +18,8 @@ final class WriteWeatherView: BaseView {
   
   private let scrollView = UIScrollView().then {
     $0.layer.cornerRadius = 15
+    $0.delaysContentTouches = false
+    $0.canCancelContentTouches = true
     $0.translatesAutoresizingMaskIntoConstraints = false
   }
   
