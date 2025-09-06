@@ -6,17 +6,24 @@
 //
 
 import UIKit
+import SwiftData
+import PhotosUI
 
 import Then
 
 class WriteWeatherViewController: BaseViewController {
-  private let viewModel = WriteWeatherViewModel()
+  private var lastPickedAssetId: String?
+  private var shouldPreselect: Bool = true
+  
+  private let modelContext: ModelContext
+  private let viewModel: WriteWeatherViewModel
   
   private let headerView = BaseNavigator().then {
     $0.translatesAutoresizingMaskIntoConstraints = false
   }
   
-  private let bottomView = ToolbarView().then {
+  private let toolbar = ToolbarView().then {
+    $0.isUserInteractionEnabled = true
     $0.translatesAutoresizingMaskIntoConstraints = false
   }
   
@@ -51,15 +58,10 @@ class WriteWeatherViewController: BaseViewController {
     $0.addTarget(self, action: #selector(setCalendarButtonTapped), for: .touchUpInside)
   }
   
-  private lazy var textView = UITextView().then {
-    $0.text = "오늘 감정 날씨는 어떤 풍경이었나요?"
-    $0.textColor = .g400
-    $0.font = .ownglyphSeoda(size: 19.5)
+  private lazy var writeView = WriteWeatherView().then {
     $0.layer.cornerRadius = 15
-    $0.backgroundColor = .white
-    $0.textContainerInset = UIEdgeInsets(top: 24, left: 24, bottom: 24, right: 24)
+    $0.setTextViewDelegate(self)
     $0.translatesAutoresizingMaskIntoConstraints = false
-    $0.delegate = self
   }
   
   private lazy var alert = UIAlertController(
@@ -81,22 +83,47 @@ class WriteWeatherViewController: BaseViewController {
     $0.preferredAction = continueAction
   }
   
+  init(modelContext: ModelContext) {
+    self.modelContext = modelContext
+    self.viewModel = WriteWeatherViewModel(modelContext: modelContext)
+    super.init(nibName: nil, bundle: nil)
+  }
+  
+  required init?(coder: NSCoder) {
+    fatalError()
+  }
+  
   override func viewDidLoad() {
     super.viewDidLoad()
-    
     headerView.onBackButtonTapped = { [weak self] in
       guard let self = self else { return }
       self.backButtonTapped()
     }
     
-    bottomView.onSaveButtonTapped = { [weak self] in
+    toolbar.onSaveButtonTapped = { [weak self] in
       guard let self = self else { return }
-      self.viewModel.inputText = textView.text
+      self.writeView.endEditingIfNeeded()
+      self.viewModel.save()
     }
     
-    bottomView.onAlignmentButtonTapped = { [weak self] alignment in
+    toolbar.onAlignmentButtonTapped = { [weak self] alignment in
       guard let self = self else { return }
-      self.textView.textAlignment = alignment
+      self.writeView.setTextAlignment(alignment)
+      self.viewModel.alignment = alignment
+    }
+    
+    toolbar.onImageButtonTapped = { [weak self] in
+      guard let self = self else { return }
+      let picker = self.makeImagePicker()
+      self.present(picker, animated: true)
+    }
+    
+    writeView.onDeleteImageButtonTapped = { [weak self] in
+      guard let self = self else { return }
+      self.viewModel.imageData = nil
+      self.writeView.configure(image: nil)
+      self.lastPickedAssetId = nil
+      self.shouldPreselect = false
     }
   }
   
@@ -106,14 +133,14 @@ class WriteWeatherViewController: BaseViewController {
   }
   
   override func setViewController() {
-    [headerView, stackView, textView, bottomView].forEach {
+    [headerView, stackView, writeView, toolbar].forEach {
       self.view.addSubview($0)
     }
     
     [weatherButton, dateLabelButton].forEach {
       stackView.addArrangedSubview($0)
     }
-  
+    
     self.navigationController?.isNavigationBarHidden = true
   }
   
@@ -131,15 +158,15 @@ class WriteWeatherViewController: BaseViewController {
       NSLayoutConstraint(item: stackView, attribute: .leading, relatedBy: .equal, toItem: view.safeAreaLayoutGuide, attribute: .leading, multiplier: 1.0, constant: 16),
       NSLayoutConstraint(item: stackView, attribute: .trailing, relatedBy: .equal, toItem: view.safeAreaLayoutGuide, attribute: .trailing, multiplier: 1.0, constant: -16),
       
-      NSLayoutConstraint(item: textView, attribute: .top, relatedBy: .equal, toItem: stackView, attribute: .bottom, multiplier: 1.0, constant: 12),
-      NSLayoutConstraint(item: textView, attribute: .leading, relatedBy: .equal, toItem: view.safeAreaLayoutGuide, attribute: .leading, multiplier: 1.0, constant: 16),
-      NSLayoutConstraint(item: textView, attribute: .trailing, relatedBy: .equal, toItem: view.safeAreaLayoutGuide, attribute: .trailing, multiplier: 1.0, constant: -16),
-      NSLayoutConstraint(item: textView, attribute: .bottom, relatedBy: .equal, toItem: bottomView, attribute: .top, multiplier: 1.0, constant: -28),
+      NSLayoutConstraint(item: writeView, attribute: .top, relatedBy: .equal, toItem: stackView, attribute: .bottom, multiplier: 1.0, constant: 12),
+      NSLayoutConstraint(item: writeView, attribute: .leading, relatedBy: .equal, toItem: view.safeAreaLayoutGuide, attribute: .leading, multiplier: 1.0, constant: 16),
+      NSLayoutConstraint(item: writeView, attribute: .trailing, relatedBy: .equal, toItem: view.safeAreaLayoutGuide, attribute: .trailing, multiplier: 1.0, constant: -16),
+      NSLayoutConstraint(item: writeView, attribute: .bottom, relatedBy: .equal, toItem: toolbar, attribute: .top, multiplier: 1.0, constant: -16), 
       
-      NSLayoutConstraint(item: bottomView, attribute: .leading, relatedBy: .equal, toItem: view.safeAreaLayoutGuide, attribute: .leading, multiplier: 1.0, constant: 0.0),
-      NSLayoutConstraint(item: bottomView, attribute: .trailing, relatedBy: .equal, toItem: view.safeAreaLayoutGuide, attribute: .trailing, multiplier: 1.0, constant: 0.0),
-      NSLayoutConstraint(item: bottomView, attribute: .bottom, relatedBy: .equal, toItem: view.keyboardLayoutGuide, attribute: .top, multiplier: 1.0, constant: 0.0),
-      NSLayoutConstraint(item: bottomView, attribute: .height, relatedBy: .equal, toItem: .none, attribute: .notAnAttribute, multiplier: 1.0, constant: 50.0),
+      NSLayoutConstraint(item: toolbar, attribute: .leading, relatedBy: .equal, toItem: view.safeAreaLayoutGuide, attribute: .leading, multiplier: 1.0, constant: 0.0),
+      NSLayoutConstraint(item: toolbar, attribute: .trailing, relatedBy: .equal, toItem: view.safeAreaLayoutGuide, attribute: .trailing, multiplier: 1.0, constant: 0.0),
+      NSLayoutConstraint(item: toolbar, attribute: .bottom, relatedBy: .equal, toItem: view.keyboardLayoutGuide, attribute: .top, multiplier: 1.0, constant: 0.0),
+      NSLayoutConstraint(item: toolbar, attribute: .height, relatedBy: .equal, toItem: .none, attribute: .notAnAttribute, multiplier: 1.0, constant: 50.0),
     ])
   }
   
@@ -156,15 +183,35 @@ class WriteWeatherViewController: BaseViewController {
       guard let self = self else { return }
       guard let date = date else { return }
       
-      let formatter = DateFormatter()
-      formatter.locale = Locale(identifier: "ko_KR")
-      formatter.dateFormat = "M월 d일 EEEE"
-      let dateString = formatter.string(from: date)
+      let dateString = date.toKoreanString()
       
       var config = self.dateLabelButton.configuration
       config?.title = dateString
       self.dateLabelButton.configuration = config
     }
+  }
+}
+
+// MARK: - Method
+private extension WriteWeatherViewController {
+  func makeImagePicker() -> PHPickerViewController {
+    var config = PHPickerConfiguration()
+    config.selectionLimit = 1
+    config.filter = .images
+    
+    if #available(iOS 15.0, *) {
+      config.selection = .ordered
+      if shouldPreselect, let id = lastPickedAssetId {
+        config.preselectedAssetIdentifiers = [id]
+      } else {
+        config.preselectedAssetIdentifiers = []
+      }
+    }
+    
+    let picker = PHPickerViewController(configuration: config)
+    picker.modalPresentationStyle = .formSheet
+    picker.delegate = self
+    return picker
   }
 }
 
@@ -187,6 +234,15 @@ private extension WriteWeatherViewController {
 
 // MARK: - Delegate
 extension WriteWeatherViewController: UITextViewDelegate {
+  func textViewDidChange(_ textView: UITextView) {
+    writeView.textViewDidChange(textView)
+    viewModel.inputText = writeView.text
+  }
+  
+  func textViewDidChangeSelection(_ textView: UITextView) {
+    writeView.textViewDidChangeSelection(textView)
+  }
+  
   func textViewDidBeginEditing(_ textView: UITextView) {
     if textView.textColor == .g400 {
       textView.text = nil
@@ -198,6 +254,28 @@ extension WriteWeatherViewController: UITextViewDelegate {
     if textView.text.isEmpty {
       textView.text = "오늘 감정 날씨는 어떤 풍경이었나요?"
       textView.textColor = .g400
+    }
+  }
+}
+
+extension WriteWeatherViewController: PHPickerViewControllerDelegate {
+  func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+    picker.dismiss(animated: true)
+    
+    guard let first = results.first else { return }
+    
+    if #available(iOS 15.0, *) {
+      self.lastPickedAssetId = first.assetIdentifier
+    }
+    self.shouldPreselect = true
+    
+    guard first.itemProvider.canLoadObject(ofClass: UIImage.self) else { return }
+    first.itemProvider.loadObject(ofClass: UIImage.self) { [weak self] obj, error in
+      guard let self = self, error == nil, let image = obj as? UIImage else { return }
+      DispatchQueue.main.async {
+        self.writeView.configure(image: image)
+        self.viewModel.imageData = image.jpegData(compressionQuality: 0.85)
+      }
     }
   }
 }

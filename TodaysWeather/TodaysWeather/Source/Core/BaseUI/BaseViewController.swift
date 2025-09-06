@@ -17,18 +17,11 @@ class BaseViewController: UIViewController {
   }
   
   override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-    self.view.endEditing(true)
+    super.touchesBegan(touches, with: event)
+    view.endEditing(true)
   }
   
-  func setViewController() {
-    
-  }
-  
-  func setAutoLayout() {
-    
-  }
-  
-  func bind() {
-    
-  }
+  func setViewController() { }
+  func setAutoLayout() { }
+  func bind() { }
 }

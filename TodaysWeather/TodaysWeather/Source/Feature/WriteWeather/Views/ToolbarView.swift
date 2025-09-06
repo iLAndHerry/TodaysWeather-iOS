@@ -11,7 +11,8 @@ import Then
 
 class ToolbarView: BaseView {
   var onSaveButtonTapped: (() -> Void)?
-  var onAlignmentButtonTapped: ((NSTextAlignment) -> Void)?
+  var onImageButtonTapped: (() -> Void)?
+  var onAlignmentButtonTapped: ((EditorAlignment) -> Void)?
   
   private var isCenterAligned = false
   
@@ -27,18 +28,19 @@ class ToolbarView: BaseView {
     $0.translatesAutoresizingMaskIntoConstraints = false
   }
   
-  private let imageButton = UIButton().then {
+  private lazy var imageButton = UIButton().then {
     $0.setImage(.imageButton, for: .normal)
+    $0.addTarget(self, action: #selector(imageButtonTapped), for: .touchUpInside)
     $0.translatesAutoresizingMaskIntoConstraints = false
   }
   
-  private let alignmentButton = UIButton().then {
+  private lazy var alignmentButton = UIButton().then {
     $0.setImage(.alignLeft, for: .normal)
     $0.addTarget(self, action: #selector(alignmentButtonTapped), for: .touchUpInside)
     $0.translatesAutoresizingMaskIntoConstraints = false
   }
   
-  private let saveButton = UIButton().then {
+  private lazy var saveButton = UIButton().then {
     $0.setImage(.checkButton, for: .normal)
     $0.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
     $0.translatesAutoresizingMaskIntoConstraints = false
@@ -46,13 +48,8 @@ class ToolbarView: BaseView {
   
   override func setView() {
     self.backgroundColor = .g100
-    [strokeView, stackView, saveButton].forEach {
-      self.addSubview($0)
-    }
-    
-    [imageButton, alignmentButton].forEach {
-      stackView.addArrangedSubview($0)
-    }
+    [strokeView, stackView, saveButton].forEach { self.addSubview($0) }
+    [imageButton, alignmentButton].forEach { stackView.addArrangedSubview($0) }
   }
   
   override func setAutoLayout() {
@@ -64,7 +61,7 @@ class ToolbarView: BaseView {
       
       NSLayoutConstraint.init(item: imageButton, attribute: .width, relatedBy: .equal, toItem: .none, attribute: .notAnAttribute, multiplier: 1.0, constant: 24),
       NSLayoutConstraint.init(item: imageButton, attribute: .height, relatedBy: .equal, toItem: .none, attribute: .notAnAttribute, multiplier: 1.0, constant: 24),
-
+      
       NSLayoutConstraint.init(item: alignmentButton, attribute: .width, relatedBy: .equal, toItem: .none, attribute: .notAnAttribute, multiplier: 1.0, constant: 24),
       NSLayoutConstraint.init(item: alignmentButton, attribute: .height, relatedBy: .equal, toItem: .none, attribute: .notAnAttribute, multiplier: 1.0, constant: 24),
       
@@ -79,6 +76,7 @@ class ToolbarView: BaseView {
   }
 }
 
+// MARK: - objc Method
 private extension ToolbarView {
   @objc func saveButtonTapped() {
     onSaveButtonTapped?()
@@ -94,5 +92,9 @@ private extension ToolbarView {
       alignmentButton.setImage(.alignLeft, for: .normal)
       onAlignmentButtonTapped?(.left)
     }
+  }
+  
+  @objc func imageButtonTapped() {
+    onImageButtonTapped?()
   }
 }

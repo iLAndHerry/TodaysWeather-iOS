@@ -6,20 +6,29 @@
 //
 
 import Foundation
+import SwiftData
 
 final class WriteWeatherViewModel {
   // MARK: - State
+  private let modelContext: ModelContext
+  
   var selectedWeather: Weather = .happy {
     didSet { onWeatherChange?(selectedWeather) }
   }
   
   var selectDate: Date? {
-    didSet { onDateChange?(selectDate)}
+    didSet { onDateChange?(selectDate) }
   }
   
   var inputText: String = "" {
     didSet { onTextChange?(inputText) }
   }
+  
+  var imageData: Data? {
+    didSet { onImageChange?(imageData) }
+  }
+  
+ var alignment: EditorAlignment = .left
   
   // MARK: - Outputs (callbacks)
   var onWeatherChange: ((Weather) -> Void)? {
@@ -31,11 +40,40 @@ final class WriteWeatherViewModel {
   }
   
   var onTextChange: ((String) -> Void)?
-  
-  init() {
+  var onImageChange: ((Data?) -> Void)?
+
+  init(modelContext: ModelContext) {
+    self.modelContext = modelContext
     self.selectDate = Date()
-    onTextChange = { text in
-      print(text)
+  }
+  
+  func save() {
+    print(inputText)
+    print(selectDate)
+    print(selectedWeather)
+    print(imageData)
+    print(alignment)
+    
+    let now = Date()
+    
+    let model = TodayWeather(
+      weather: selectedWeather.rawValue,
+      date: selectDate ?? now,
+      content: inputText,
+      alignment: alignment,
+      imageData: imageData,
+      createdAt: now,
+      updatedAt: now
+    )
+    
+    modelContext.insert(model)
+    
+    do {
+      print("저장성공")
+      try modelContext.save()
+    } catch {
+      print("저장에러")
     }
   }
 }
+
