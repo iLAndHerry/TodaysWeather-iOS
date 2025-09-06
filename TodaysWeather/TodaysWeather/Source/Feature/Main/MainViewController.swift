@@ -103,11 +103,13 @@ class MainViewController: BaseViewController {
     [alignmentLabel, alignmentButton].forEach {
       alignmentStack.addArrangedSubview($0)
     }
+    
+    self.navigationController?.isNavigationBarHidden = true
   }
   
   override func setAutoLayout() {
     NSLayoutConstraint.activate([
-      NSLayoutConstraint(item: calendarStackView, attribute: .top, relatedBy: .equal, toItem: view.safeAreaLayoutGuide, attribute: .top, multiplier: 1.0, constant: 40),
+      NSLayoutConstraint(item: calendarStackView, attribute: .top, relatedBy: .equal, toItem: view.safeAreaLayoutGuide, attribute: .top, multiplier: 1.0, constant: 20.0),
       NSLayoutConstraint(item: calendarStackView, attribute: .centerX, relatedBy: .equal, toItem: view.safeAreaLayoutGuide, attribute: .centerX, multiplier: 1.0, constant: 0.0),
       
       NSLayoutConstraint(item: writeButton, attribute: .bottom, relatedBy: .equal, toItem: view.safeAreaLayoutGuide, attribute: .bottom, multiplier: 1.0, constant: -26),
