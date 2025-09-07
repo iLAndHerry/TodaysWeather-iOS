@@ -301,7 +301,11 @@ extension MainViewController: UICollectionViewDataSource {
 extension MainViewController: UICollectionViewDelegate {
   func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
     let item = items[indexPath.item]
-    let vc = DetailViewController(item: item)
+    let vc = DetailViewController(item: item, modelContext: modelContext)
+    vc.onDeleted = { [weak self] in
+      guard let self = self else { return }
+      self.fetchAndReload(sortOrder: self.currentSortOrder)
+    }
     navigationController?.pushViewController(vc, animated: true)
   }
 }

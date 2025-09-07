@@ -6,12 +6,15 @@
 //
 
 import UIKit
+import SwiftData
 
 import Then
 
 final class DetailViewController: BaseViewController {
   private let item: TodayWeather
+  private let modelContext: ModelContext
   
+  var onDeleted: (() -> Void)?
   private let headerView = BaseNavigator().then {
     $0.showsToastButton = true
     $0.translatesAutoresizingMaskIntoConstraints = false
@@ -41,8 +44,9 @@ final class DetailViewController: BaseViewController {
     $0.translatesAutoresizingMaskIntoConstraints = false
   }
   
-  init(item: TodayWeather) {
+  init(item: TodayWeather, modelContext: ModelContext) {
     self.item = item
+    self.modelContext = modelContext
     super.init(nibName: nil, bundle: nil)
   }
   
@@ -56,6 +60,11 @@ final class DetailViewController: BaseViewController {
     headerView.onBackButtonTapped = { [weak self] in
       guard let self = self else { return }
       self.backButtonTapped()
+    }
+    
+    headerView.onDeleteButtonTapped = { [weak self] in
+      guard let self = self else { return }
+      self.deleteButtonTapped()
     }
   }
   
@@ -109,5 +118,38 @@ final class DetailViewController: BaseViewController {
 private extension DetailViewController {
   func backButtonTapped() {
     self.navigationController?.popViewController(animated: true)
+  }
+  
+  func deleteButtonTapped() {
+    let alert = UIAlertController(
+      title: "정말 삭제할까요? 🥹",
+      message: "삭제 후에는 되돌릴 수 없어요",
+      preferredStyle: .alert
+    )
+    
+    let deleteAction = UIAlertAction(title: "삭제", style: .destructive) { _ in
+      self.deleteItem()
+    }
+    
+    let cancelAction = UIAlertAction(title: "취소", style: .default, handler: nil)
+    
+    alert.addAction(deleteAction)
+    alert.addAction(cancelAction)
+    
+    self.present(alert, animated: true)
+  }
+}
+
+// MARK: - SwiftData
+private extension DetailViewController {
+  func deleteItem() {
+    modelContext.delete(item)
+    do {
+      try modelContext.save()
+      onDeleted?()
+      navigationController?.popViewController(animated: true)
+    } catch {
+      print("삭제 에러")
+    }
   }
 }

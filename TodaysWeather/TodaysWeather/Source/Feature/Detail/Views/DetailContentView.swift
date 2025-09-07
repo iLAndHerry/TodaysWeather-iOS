@@ -20,7 +20,6 @@ final class DetailContentView: BaseView {
   }
   
   private let imageView = UIImageView().then {
-    $0.image = .test
     $0.layer.cornerRadius = 15
     $0.contentMode = .scaleAspectFill
     $0.clipsToBounds = true
