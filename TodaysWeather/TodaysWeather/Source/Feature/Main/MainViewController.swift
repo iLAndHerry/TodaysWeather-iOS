@@ -297,3 +297,11 @@ extension MainViewController: UICollectionViewDataSource {
     return cell
   }
 }
+
+extension MainViewController: UICollectionViewDelegate {
+  func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+    let item = items[indexPath.item]
+    let vc = DetailViewController(item: item)
+    navigationController?.pushViewController(vc, animated: true)
+  }
+}
