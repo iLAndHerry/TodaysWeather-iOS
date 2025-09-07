@@ -9,12 +9,20 @@ import UIKit
 
 import Then
 
-class BaseNavigator: BaseView {
+final class BaseNavigator: BaseView {
   var onBackButtonTapped: (() -> Void)?
   var onEditButtonTapped: (() -> Void)?
   var onShareButtonTapped: (() -> Void)?
   var onImageSaveButtonTapped: (() -> Void)?
   var onDeleteButtonTapped: (() -> Void)?
+  
+  var showsBackButton: Bool = true {
+    didSet { backButton.isHidden = !showsBackButton }
+  }
+  
+  var showsToastButton: Bool = false {
+    didSet { toastButton.isHidden = !showsToastButton }
+  }
   
   private lazy var backButton = UIButton().then {
     $0.setImage(.chevronLeft.withTintColor(.keyColor, renderingMode: .alwaysOriginal), for: .normal)
@@ -53,7 +61,10 @@ class BaseNavigator: BaseView {
     [backButton, toastButton].forEach {
       self.addSubview($0)
     }
+    
     self.backgroundColor = .clear
+    backButton.isHidden = !showsBackButton
+    toastButton.isHidden = !showsToastButton
   }
   
   override func setAutoLayout() {
