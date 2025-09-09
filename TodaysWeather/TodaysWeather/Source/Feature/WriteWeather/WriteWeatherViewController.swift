@@ -64,25 +64,6 @@ class WriteWeatherViewController: BaseViewController {
     $0.translatesAutoresizingMaskIntoConstraints = false
   }
   
-  private lazy var alert = UIAlertController(
-    title: "글쓰기를 그만 두시나요? 🥲",
-    message: "작성된 글이 저장되지 않아요",
-    preferredStyle: .alert
-  ).then {
-    let exitAction = UIAlertAction(title: "나가기", style: .destructive) { _ in
-      self.navigationController?.popViewController(animated: true)
-    }
-    
-    let continueAction = UIAlertAction(title: "계속 작성", style: .default) { _ in
-      print("continue")
-    }
-    
-    $0.addAction(exitAction)
-    $0.addAction(continueAction)
-    
-    $0.preferredAction = continueAction
-  }
-  
   init(modelContext: ModelContext) {
     self.modelContext = modelContext
     self.viewModel = WriteWeatherViewModel(modelContext: modelContext)
@@ -97,7 +78,7 @@ class WriteWeatherViewController: BaseViewController {
     super.viewDidLoad()
     headerView.onBackButtonTapped = { [weak self] in
       guard let self = self else { return }
-      self.backButtonTapped()
+      self.showWriteCancelAlert()
     }
     
     toolbar.onSaveButtonTapped = { [weak self] in
@@ -161,7 +142,7 @@ class WriteWeatherViewController: BaseViewController {
       NSLayoutConstraint(item: writeView, attribute: .top, relatedBy: .equal, toItem: stackView, attribute: .bottom, multiplier: 1.0, constant: 12),
       NSLayoutConstraint(item: writeView, attribute: .leading, relatedBy: .equal, toItem: view.safeAreaLayoutGuide, attribute: .leading, multiplier: 1.0, constant: 16),
       NSLayoutConstraint(item: writeView, attribute: .trailing, relatedBy: .equal, toItem: view.safeAreaLayoutGuide, attribute: .trailing, multiplier: 1.0, constant: -16),
-      NSLayoutConstraint(item: writeView, attribute: .bottom, relatedBy: .equal, toItem: toolbar, attribute: .top, multiplier: 1.0, constant: -16), 
+      NSLayoutConstraint(item: writeView, attribute: .bottom, relatedBy: .equal, toItem: toolbar, attribute: .top, multiplier: 1.0, constant: -16),
       
       NSLayoutConstraint(item: toolbar, attribute: .leading, relatedBy: .equal, toItem: view.safeAreaLayoutGuide, attribute: .leading, multiplier: 1.0, constant: 0.0),
       NSLayoutConstraint(item: toolbar, attribute: .trailing, relatedBy: .equal, toItem: view.safeAreaLayoutGuide, attribute: .trailing, multiplier: 1.0, constant: 0.0),
@@ -189,6 +170,12 @@ class WriteWeatherViewController: BaseViewController {
       config?.title = dateString
       self.dateLabelButton.configuration = config
     }
+    
+    viewModel.onSave = { [weak self] in
+      guard let self = self else { return }
+      
+      showWriteSuccessAlert()
+    }
   }
 }
 
@@ -213,14 +200,45 @@ private extension WriteWeatherViewController {
     picker.delegate = self
     return picker
   }
+  
+  func showWriteCancelAlert() {
+    let alert = UIAlertController(
+      title: "글쓰기를 그만 두시나요? 🥲",
+      message: "작성된 글이 저장되지 않아요",
+      preferredStyle: .alert
+    )
+    
+    let exitAction = UIAlertAction(title: "나가기", style: .destructive) { _ in
+      self.navigationController?.popViewController(animated: true)
+    }
+    
+    let cancelAction = UIAlertAction(title: "계속 작성", style: .default, handler: nil)
+    
+    alert.addAction(exitAction)
+    alert.addAction(cancelAction)
+    
+    self.present(alert, animated: true)
+  }
+  
+  func showWriteSuccessAlert() {
+    let alert = UIAlertController(
+      title: "작성 완료되었어요🌥️",
+      message: "",
+      preferredStyle: .alert
+    )
+    
+    let continueAction = UIAlertAction(title: "확인", style: .default) { _ in
+      self.navigationController?.popViewController(animated: true)
+    }
+    
+    alert.addAction(continueAction)
+    
+    self.present(alert, animated: true)
+  }
 }
 
 // MARK: - objc Method
 private extension WriteWeatherViewController {
-  @objc func backButtonTapped() {
-    self.present(alert, animated: true)
-  }
-  
   @objc func setCalendarButtonTapped() {
     let vc = SelectDateModalViewController(viewModel: viewModel)
     self.present(vc, animated: true)

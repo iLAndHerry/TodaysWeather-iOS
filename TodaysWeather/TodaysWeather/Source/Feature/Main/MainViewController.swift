@@ -125,6 +125,10 @@ class MainViewController: BaseViewController {
     fetchAndReload(sortOrder: .latest)
   }
   
+  override func viewWillAppear(_ animated: Bool) {
+    self.fetchAndReload(sortOrder: self.currentSortOrder)
+  }
+  
   override func setViewController() {
     [calendarView, alignmentStack, writeButton, weatherListCollectionView, emptyView].forEach {
       self.view.addSubview($0)
