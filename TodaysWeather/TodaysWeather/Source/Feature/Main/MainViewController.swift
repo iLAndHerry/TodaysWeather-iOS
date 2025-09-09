@@ -125,6 +125,10 @@ class MainViewController: BaseViewController {
     fetchAndReload(sortOrder: .latest)
   }
   
+  override func viewWillAppear(_ animated: Bool) {
+    self.fetchAndReload(sortOrder: self.currentSortOrder)
+  }
+  
   override func setViewController() {
     [calendarView, alignmentStack, writeButton, weatherListCollectionView, emptyView].forEach {
       self.view.addSubview($0)
@@ -295,5 +299,17 @@ extension MainViewController: UICollectionViewDataSource {
     let dateString = item.date.toKoreanMultiLineString()
     cell.configure(weather: weatherImage, date: dateString, content: item.content, imageData: image)
     return cell
+  }
+}
+
+extension MainViewController: UICollectionViewDelegate {
+  func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+    let item = items[indexPath.item]
+    let vc = DetailViewController(item: item, modelContext: modelContext)
+    vc.onDeleted = { [weak self] in
+      guard let self = self else { return }
+      self.fetchAndReload(sortOrder: self.currentSortOrder)
+    }
+    navigationController?.pushViewController(vc, animated: true)
   }
 }
