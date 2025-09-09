@@ -76,12 +76,10 @@ final class DateHeaderView: BaseView {
 
 private extension DateHeaderView {
   @objc private func leftTapped() {
-    print("left")
     onPrevTapped?()
   }
   
   @objc private func rightTapped() {
-    print("right")
     onNextTapped?()
   }
 }
