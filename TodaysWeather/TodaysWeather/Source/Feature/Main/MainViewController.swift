@@ -96,7 +96,7 @@ class MainViewController: BaseViewController {
   
   override func viewDidLoad() {
     super.viewDidLoad()
-  
+    
     calendarView.configure(year: currentYear, month: currentMonth)
     
     calendarView.onPrevTapped = { [weak self] in
@@ -181,10 +181,18 @@ extension MainViewController {
     let end = range.end
     
     do {
-      let sort: SortDescriptor<TodayWeather> = {
+      let sorts: [SortDescriptor<TodayWeather>] = {
         switch sortOrder {
-        case .latest: return SortDescriptor(\.createdAt, order: .reverse)
-        case .oldest: return SortDescriptor(\.createdAt, order: .forward)
+        case .latest:
+          return [
+            SortDescriptor(\.date, order: .reverse),
+            SortDescriptor(\.createdAt, order: .reverse)
+          ]
+        case .oldest:
+          return [
+            SortDescriptor(\.date, order: .forward),
+            SortDescriptor(\.createdAt, order: .forward)
+          ]
         }
       }()
       
@@ -192,7 +200,7 @@ extension MainViewController {
         item.date >= start && item.date < end
       }
       
-      let descriptor = FetchDescriptor<TodayWeather>(predicate: predicate, sortBy: [sort])
+      let descriptor = FetchDescriptor<TodayWeather>(predicate: predicate, sortBy: sorts)
       items = try modelContext.fetch(descriptor)
       
       let isEmpty = items.isEmpty
