@@ -20,6 +20,8 @@ final class WriteWeatherView: BaseView {
     $0.layer.cornerRadius = 15
     $0.delaysContentTouches = false
     $0.canCancelContentTouches = true
+    $0.showsVerticalScrollIndicator = false
+    $0.showsHorizontalScrollIndicator = false
     $0.translatesAutoresizingMaskIntoConstraints = false
   }
   

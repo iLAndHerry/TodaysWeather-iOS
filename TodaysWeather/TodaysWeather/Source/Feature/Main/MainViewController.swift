@@ -85,6 +85,8 @@ class MainViewController: BaseViewController {
     $0.backgroundColor = .clear
     $0.translatesAutoresizingMaskIntoConstraints = false
     $0.layer.cornerRadius = 10
+    $0.showsVerticalScrollIndicator = false
+    $0.showsHorizontalScrollIndicator = false
   }
   
   init(modelContext: ModelContext) {
