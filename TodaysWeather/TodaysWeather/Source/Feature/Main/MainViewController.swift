@@ -209,7 +209,7 @@ extension MainViewController {
 // MARK: - Actions
 private extension MainViewController {
   @objc func writeButtonTapped() {
-    let vc = WriteWeatherViewController(modelContext: modelContext)
+    let vc = WriteWeatherViewController(modelContext: modelContext, mode: .writeMode)
     navigationController?.pushViewController(vc, animated: true)
   }
 }

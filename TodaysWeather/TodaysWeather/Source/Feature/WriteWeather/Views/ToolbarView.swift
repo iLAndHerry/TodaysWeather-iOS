@@ -9,7 +9,7 @@ import UIKit
 
 import Then
 
-class ToolbarView: BaseView {
+final class ToolbarView: BaseView {
   var onSaveButtonTapped: (() -> Void)?
   var onImageButtonTapped: (() -> Void)?
   var onAlignmentButtonTapped: ((EditorAlignment) -> Void)?
@@ -96,5 +96,13 @@ private extension ToolbarView {
   
   @objc func imageButtonTapped() {
     onImageButtonTapped?()
+  }
+}
+
+extension ToolbarView {
+  func setAlignmentButton(_ alignment: EditorAlignment) {
+    isCenterAligned = (alignment == .center)
+    let image: UIImage = isCenterAligned ? .alignCenter : .alignLeft
+    alignmentButton.setImage(image, for: .normal)
   }
 }

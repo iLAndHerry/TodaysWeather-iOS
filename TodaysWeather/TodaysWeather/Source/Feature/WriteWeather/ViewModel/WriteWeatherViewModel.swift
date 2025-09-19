@@ -42,6 +42,7 @@ final class WriteWeatherViewModel {
   var onTextChange: ((String) -> Void)?
   var onImageChange: ((Data?) -> Void)?
   var onSave: (() -> Void)?
+  var onUpdate: (() -> Void)?
 
   init(modelContext: ModelContext) {
     self.modelContext = modelContext
@@ -69,6 +70,22 @@ final class WriteWeatherViewModel {
       onSave?()
     } catch {
       print("저장에러")
+    }
+  }
+  
+  func update(existing: TodayWeather) {
+    existing.content = inputText
+    existing.date = selectDate ?? existing.date
+    existing.alignment = alignment
+    existing.weather = selectedWeather.rawValue
+    existing.imageData = imageData
+    
+    do {
+      print("업데이트 성공")
+      try modelContext.save()
+      onUpdate?()
+    } catch {
+      print("업데이트 에러")
     }
   }
 }

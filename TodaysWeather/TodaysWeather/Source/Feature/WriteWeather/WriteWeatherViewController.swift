@@ -11,9 +11,12 @@ import PhotosUI
 
 import Then
 
-class WriteWeatherViewController: BaseViewController {
+final class WriteWeatherViewController: BaseViewController {
+  private let mode: ViewMode
+  
   private var lastPickedAssetId: String?
   private var shouldPreselect: Bool = true
+  private var didPresentOnApper = false
   
   private let modelContext: ModelContext
   private let viewModel: WriteWeatherViewModel
@@ -64,8 +67,9 @@ class WriteWeatherViewController: BaseViewController {
     $0.translatesAutoresizingMaskIntoConstraints = false
   }
   
-  init(modelContext: ModelContext) {
+  init(modelContext: ModelContext, mode: ViewMode) {
     self.modelContext = modelContext
+    self.mode = mode
     self.viewModel = WriteWeatherViewModel(modelContext: modelContext)
     super.init(nibName: nil, bundle: nil)
   }
@@ -84,7 +88,13 @@ class WriteWeatherViewController: BaseViewController {
     toolbar.onSaveButtonTapped = { [weak self] in
       guard let self = self else { return }
       self.writeView.endEditingIfNeeded()
-      self.viewModel.save()
+      
+      switch self.mode {
+      case .writeMode:
+        self.viewModel.save()
+      case .editMode(let existing):
+        self.viewModel.update(existing: existing)
+      }
     }
     
     toolbar.onAlignmentButtonTapped = { [weak self] alignment in
@@ -106,11 +116,19 @@ class WriteWeatherViewController: BaseViewController {
       self.lastPickedAssetId = nil
       self.shouldPreselect = false
     }
+    
+    applyModeInitialSetup()
   }
   
   override func viewDidAppear(_ animated: Bool) {
-    let vc = SelectWeatherModalViewController(viewModel: viewModel)
-    present(vc, animated: true)
+    super.viewDidAppear(animated)
+    guard !didPresentOnApper else { return }
+    didPresentOnApper = true
+    
+    if case .writeMode = mode {
+      let vc = SelectWeatherModalViewController(viewModel: viewModel)
+      present(vc, animated: true)
+    }
   }
   
   override func setViewController() {
@@ -173,8 +191,12 @@ class WriteWeatherViewController: BaseViewController {
     
     viewModel.onSave = { [weak self] in
       guard let self = self else { return }
-      
-      showWriteSuccessAlert()
+      self.showWriteSuccessAlert()
+    }
+    
+    viewModel.onUpdate = { [weak self] in
+      guard let self = self else { return }
+      self.showEditSuccessAlert()
     }
   }
 }
@@ -201,23 +223,22 @@ private extension WriteWeatherViewController {
     return picker
   }
   
-  func showWriteCancelAlert() {
-    let alert = UIAlertController(
-      title: "글쓰기를 그만 두시나요? 🥲",
-      message: "작성된 글이 저장되지 않아요",
-      preferredStyle: .alert
-    )
+  private func showWriteCancelAlert() {
+    let (title, message): (String, String) = {
+      switch mode {
+      case .writeMode: return ("글쓰기를 그만 두시나요? 🥲", "작성된 글이 저장되지 않아요")
+      case .editMode:  return ("수정을 취소하시나요? 🥲", "변경사항이 저장되지 않아요")
+      }
+    }()
     
+    let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
     let exitAction = UIAlertAction(title: "나가기", style: .destructive) { _ in
       self.navigationController?.popViewController(animated: true)
     }
-    
-    let cancelAction = UIAlertAction(title: "계속 작성", style: .default, handler: nil)
-    
+    let cancelAction = UIAlertAction(title: "계속하기", style: .default, handler: nil)
     alert.addAction(exitAction)
     alert.addAction(cancelAction)
-    
-    self.present(alert, animated: true)
+    present(alert, animated: true)
   }
   
   func showWriteSuccessAlert() {
@@ -234,6 +255,61 @@ private extension WriteWeatherViewController {
     alert.addAction(continueAction)
     
     self.present(alert, animated: true)
+  }
+  
+  func showEditSuccessAlert() {
+    let alert = UIAlertController(
+      title: "수정 완료되었어요🌤️",
+      message: "",
+      preferredStyle: .alert
+    )
+    
+    let continueAction = UIAlertAction(title: "확인", style: .default) { _ in
+      self.navigationController?.popViewController(animated: true)
+    }
+    
+    alert.addAction(continueAction)
+    
+    self.present(alert, animated: true)
+  }
+  
+  func applyModeInitialSetup() {
+    switch mode {
+    case .writeMode:
+      let today = Date()
+      viewModel.selectDate = today
+      
+      var config = dateLabelButton.configuration
+      config?.title = today.toKoreanString()
+      dateLabelButton.configuration = config
+      
+      toolbar.setAlignmentButton(viewModel.alignment)
+      
+    case .editMode(let existing):
+      toolbar.setAlignmentButton(existing.alignment)
+      viewModel.selectDate = existing.date
+      var config = dateLabelButton.configuration
+      config?.title = existing.date.toKoreanString()
+      dateLabelButton.configuration = config
+      
+      writeView.text = existing.content
+      viewModel.inputText = existing.content
+      
+      writeView.setTextAlignment(existing.alignment)
+      viewModel.alignment = existing.alignment
+      
+      let weatherImage = UIImage(named: existing.weather) ?? .happy
+      weatherButton.setImage(weatherImage, for: .normal)
+      viewModel.selectedWeather = Weather(rawValue: existing.weather) ?? .happy
+      
+      if let data = existing.imageData, let img = UIImage(data: data) {
+        writeView.configure(image: img)
+        viewModel.imageData = data
+      } else {
+        writeView.configure(image: nil)
+        viewModel.imageData = nil
+      }
+    }
   }
 }
 

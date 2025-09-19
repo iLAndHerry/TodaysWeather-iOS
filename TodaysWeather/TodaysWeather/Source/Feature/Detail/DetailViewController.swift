@@ -11,7 +11,7 @@ import SwiftData
 import Then
 
 final class DetailViewController: BaseViewController {
-  private let item: TodayWeather
+  private var item: TodayWeather
   private let modelContext: ModelContext
   
   var onDeleted: (() -> Void)?
@@ -54,6 +54,11 @@ final class DetailViewController: BaseViewController {
     fatalError()
   }
   
+  override func viewWillAppear(_ animated: Bool) {
+    super.viewWillAppear(animated)
+    reloadFromStore()
+  }
+  
   override func viewDidLoad() {
     super.viewDidLoad()
     
@@ -65,6 +70,11 @@ final class DetailViewController: BaseViewController {
     headerView.onDeleteButtonTapped = { [weak self] in
       guard let self = self else { return }
       self.deleteButtonTapped()
+    }
+    
+    headerView.onEditButtonTapped = { [weak self] in
+      guard let self = self else { return }
+      self.editButtonTapped()
     }
   }
   
@@ -106,12 +116,7 @@ final class DetailViewController: BaseViewController {
   }
   
   override func bind() {
-    let weatherImage = UIImage(named: item.weather) ?? .happy
-    let date = item.date.toKoreanString()
-    let image = item.imageData.flatMap { UIImage(data: $0) }
-    weatherImageView.image = weatherImage
-    dateLabel.text = date
-    detailContentView.configure(image: image, content: item.content, alignment: item.alignment)
+    bindUI()
   }
 }
 
@@ -138,10 +143,43 @@ private extension DetailViewController {
     
     self.present(alert, animated: true)
   }
+  
+  func editButtonTapped() {
+    let vc = WriteWeatherViewController(modelContext: modelContext, mode: .editMode(existing: item))
+    self.navigationController?.pushViewController(vc, animated: true)
+  }
 }
 
 // MARK: - SwiftData
 private extension DetailViewController {
+  func reloadFromStore() {
+    do {
+      let targetID: UUID = item.id
+      var desc = FetchDescriptor<TodayWeather>(
+        predicate: #Predicate<TodayWeather> { $0.id == targetID }
+      )
+      desc.fetchLimit = 1
+      
+      if let fresh = try modelContext.fetch(desc).first {
+        item = fresh
+        bindUI()
+      } else {
+        navigationController?.popViewController(animated: true)
+      }
+    } catch {
+      print("reload error:", error)
+    }
+  }
+  
+  func bindUI() {
+    let weatherImage = UIImage(named: item.weather) ?? .happy
+    let date = item.date.toKoreanString()
+    let image = item.imageData.flatMap { UIImage(data: $0) }
+    weatherImageView.image = weatherImage
+    dateLabel.text = date
+    detailContentView.configure(image: image, content: item.content, alignment: item.alignment)
+  }
+  
   func deleteItem() {
     modelContext.delete(item)
     do {
