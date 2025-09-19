@@ -316,12 +316,16 @@ private extension WriteWeatherViewController {
 // MARK: - objc Method
 private extension WriteWeatherViewController {
   @objc func setCalendarButtonTapped() {
+    view.endEditing(true)
     let vc = SelectDateModalViewController(viewModel: viewModel)
+    vc.modalPresentationStyle = .pageSheet
     self.present(vc, animated: true)
   }
   
   @objc func selectWeatherButtonTapped() {
+    view.endEditing(true)
     let vc = SelectWeatherModalViewController(viewModel: viewModel)
+    vc.modalPresentationStyle = .pageSheet
     self.present(vc, animated: true)
   }
 }
