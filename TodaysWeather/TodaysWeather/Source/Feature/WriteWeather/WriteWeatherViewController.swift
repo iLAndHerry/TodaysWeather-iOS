@@ -283,7 +283,10 @@ private extension WriteWeatherViewController {
       config?.title = today.toKoreanString()
       dateLabelButton.configuration = config
       
+      toolbar.setAlignmentButton(viewModel.alignment)
+      
     case .editMode(let existing):
+      toolbar.setAlignmentButton(existing.alignment)
       viewModel.selectDate = existing.date
       var config = dateLabelButton.configuration
       config?.title = existing.date.toKoreanString()
