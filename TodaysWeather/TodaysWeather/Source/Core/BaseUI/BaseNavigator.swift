@@ -32,7 +32,8 @@ final class BaseNavigator: BaseView {
   
   private lazy var toastButton = UIButton().then {
     $0.setImage(.toastButton, for: .normal)
-    $0.menu = UIMenu(children: [editButtonAction, shareButtonAction, imageSaveButtonAction, deleteButtonAction])
+    //$0.menu = UIMenu(children: [editButtonAction, shareButtonAction, imageSaveButtonAction, deleteButtonAction])
+    $0.menu = UIMenu(children: [editButtonAction, deleteButtonAction])
     $0.showsMenuAsPrimaryAction = true
     $0.translatesAutoresizingMaskIntoConstraints = false
   }
