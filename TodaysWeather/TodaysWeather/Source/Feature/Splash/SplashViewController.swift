@@ -18,7 +18,7 @@ final class SplashViewController: BaseViewController {
   }
   
   private let logoText = UILabel().then {
-    $0.text = "오늘의 날씨"
+    $0.text = "하루의 날씨"
     $0.textColor = .keyColor
     $0.font = .ownglyphSeoda(size: 25)
     $0.translatesAutoresizingMaskIntoConstraints = false
