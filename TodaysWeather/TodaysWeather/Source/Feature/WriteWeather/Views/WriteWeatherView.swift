@@ -30,7 +30,7 @@ final class WriteWeatherView: BaseView {
   }
   
   private lazy var textView = UITextView().then {
-    $0.text = "오늘 감정 날씨는 어떤 풍경이었나요?"
+    $0.text = "오늘 하루 감정 날씨는 어땠나요?"
     $0.textColor = .g400
     $0.font = .ownglyphSeoda(size: 19.5)
     $0.backgroundColor = .white
